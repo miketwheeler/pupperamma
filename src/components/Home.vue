@@ -1,7 +1,7 @@
 <template>
     <v-container height="calc(100% - 40px)" fluid max-width="1400px">
         <v-row class="fill-height">
-            <v-col cols="4">
+            <v-col cols="12" xs="12" sm="4" md="3">
                 <v-card
                     class="py-4"
                     prepend-icon="mdi-filter"
@@ -25,9 +25,10 @@
                 </v-card>
             </v-col>
 
-            <v-col cols="8">
-
-                <CardGrid />
+            <v-col cols="12"xs="12" sm="8" md="9" class="d-flex flex-column">
+                
+                <AppliedFilters />
+                <CardGrid page="home" />
 
             </v-col>
 
@@ -38,6 +39,9 @@
 <script setup lang="ts">
 import FilterPanel from '@/components/body/FilterPanel.vue';
 import CardGrid from '@/components/body/CardGrid.vue';
+import AppliedFilters from '@/components/menu/AppliedFilters.vue';
 
+
+const page = ref(1);
 
 </script>

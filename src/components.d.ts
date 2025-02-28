@@ -10,14 +10,17 @@ declare module 'vue' {
     Account: typeof import('./components/menu/MyAccount.vue')['default']
     Appbar: typeof import('./components/Appbar.vue')['default']
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    AppliedFilters: typeof import('./components/menu/AppliedFilters.vue')['default']
     AuthDialog: typeof import('./components/menu/AuthDialog.vue')['default']
     CardGrid: typeof import('./components/body/CardGrid.vue')['default']
-    Favorites: typeof import('./components/menu/Favorites.vue')['default']
+    CustomSnackbar: typeof import('./components/menu/CustomSnackbar.vue')['default']
+    Favorites: typeof import('./components/Favorites.vue')['default']
     FilterPanel: typeof import('./components/body/FilterPanel.vue')['default']
     HelloWorld: typeof import('./components/Home.vue')['default']
     Home: typeof import('./components/Home.vue')['default']
     MyAccount: typeof import('./components/menu/MyAccount.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Snackbar: typeof import('./components/menu/Snackbar.vue')['default']
   }
 }
