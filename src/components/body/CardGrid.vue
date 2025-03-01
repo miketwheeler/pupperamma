@@ -1,11 +1,11 @@
 <template>
     <v-row>
-        <v-col v-if="props && props.page === 'home'" cols="12" class="justify-end d-flex">
+        <v-col v-if="!loading && props && props.page === 'home'" cols="12" class="justify-end d-flex px-8">
             <div class="text-grey">
                 Viewing {{ currentResultRangeStart }}-{{ currentResultRangeEnd }} of {{ totalResults }}
             </div>
         </v-col>
-        <v-col v-else cols="12" class="mt-3">
+        <v-col v-if="!loading && props && props.page === 'favorites'" cols="12" class="mt-3">
             <div class="text-h5 font-weight-bold">
                 You have {{ appStore.favorites.length || 0 }} Favorites!
             </div>
@@ -37,7 +37,7 @@
                             :v-model="appStore.favorites.includes(card.id)"
                             :color="card.liked ? 'error' : 'grey'" 
                             class="opacity-100 ma-1"
-                            variant="plain" 
+                            variant="plain"
                             icon 
                             :disabled="loading || props.page === 'favorites'"
                             @click="card.liked = !card.liked; setFavorite($event, card.id, card.liked)" 
@@ -55,8 +55,8 @@
         </v-col>
     </v-row>
     <v-row>
-        <v-col cols="12" class="justify-end d-flex">
-            <div v-if="props && props.page === 'home'" class="text-grey">
+        <v-col v-if="!loading && props && props.page === 'home'" cols="12" class="justify-end d-flex px-8">
+            <div class="text-grey">
                 Viewing {{ currentResultRangeStart }}-{{ currentResultRangeEnd }} of {{ totalResults }}
             </div>
         </v-col>
@@ -65,7 +65,7 @@
         <v-col cols="12" class="d-flex justify-center">
             <div style="display: flex; justify-content: center; align-items: center;">
                 <v-pagination 
-                    v-if="props && props.page === 'home'"
+                    v-if="!loading && props && props.page === 'home'"
                     v-model="appStore.pagination.from" 
                     :current-page-aria-label="`viewing-page-number-${page}`"
                     :length="totalResults" 
@@ -85,6 +85,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import api, { type Dog } from '@/services/api';
+
 
 // TODO: type to the card model && 'Dog' model
 interface Card {
@@ -108,15 +109,15 @@ const searchedDogsResult = ref(null);
 const page = computed(() => appStore.pagination.from + 1);
 const currentResultRangeStart = computed(() => appStore.pagination.from * appStore.filterState.size - appStore.filterState.size + 1);
 const currentResultRangeEnd = computed(() => appStore.pagination.from > 0 ? appStore.pagination.from * appStore.filterState.size : appStore.filterState.size)
+const isAuthExpired = computed(() => appStore.isAuthExpired);
 
 // adds/remove favorites to state var -> appStore.favorites (list ids)
 const setFavorite = (event: MouseEvent, id: string, liked: boolean) => {
-    console.log('event', event);
     console.log("id", id);
 
     if (liked) {
-        console.log('appStore.favorites', [...appStore.favorites, id]);
         appStore.setFavorites([...appStore.favorites, id]);
+        // console.log('appStore.favorites', [...appStore.favorites, id]);
     } else {
         appStore.favorites.splice(appStore.favorites.indexOf(id), 1);
     }
@@ -197,17 +198,19 @@ const getFavoritedDogs = async () => {
 
 // if page is home, get the dogs, else get the favorited dogs
 onMounted(() => {
-    if(props && props.page === 'home') {
-        getDogs();
-    }
-    else if(props && props.page === 'favorites') {
-        getFavoritedDogs();
+    if(!isAuthExpired.value) {
+        if(props && props.page === 'home') {
+            getDogs();
+        }
+        else if(props && props.page === 'favorites') {
+            getFavoritedDogs();
+        }
     }
 })
 
 // watch for changes in the filter state and pagination
-watch([appStore.filterState, appStore.pagination], (newValue) => {
-    if (props) {
+watch([appStore.filterState, appStore.pagination, isAuthExpired], (newValue) => {
+    if (props && !isAuthExpired.value) {
         if (props.page === 'home') {
             cardStack.value = [];
             getDogs();

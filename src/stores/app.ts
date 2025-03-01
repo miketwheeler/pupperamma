@@ -1,8 +1,9 @@
 // Utilities
 import { defineStore } from 'pinia';
 import api from '@/services/api';
+import { useRouter } from 'vue-router';
 
-// sesh
+// mock 'session'
 type User = {
     name: string,
     email: string,
@@ -13,8 +14,8 @@ export const useAppStore = defineStore('app', {
         // user
         session: {
             user: {} as User,
-            loggedIn: false,
-            expiry: {} as Date,
+            // loggedIn: false,
+            expiry: null as Date | null,
         },
         // filter state
         filterState: {
@@ -36,52 +37,82 @@ export const useAppStore = defineStore('app', {
             from: 1,
         }
     }),
+    getters: {
+        isAuthExpired: (state) => {
+            // true if expired, false if not
+            if (!state.session.expiry) {
+                return true;
+            }
+            return new Date(state.session.expiry) < new Date();
+        },
+    },
     actions: {
         // set user
-        setUser(user: User) {
-            this.session.user = user;
-            this.session.loggedIn = true;
-        },
-        setUserLoggedOut() {
-            this.session.user = {} as User;
-            this.session.loggedIn = false;
-        },
+        // setUser(user: User) {
+        //     this.session.user = user;
+        //     // this.session.loggedIn = true;
+        // },
+        // setUserLoggedOut() {
+        //     this.session.user = {} as User;
+        //     // this.session.loggedIn = false;
+        //     this.session.expiry = null;
+        // },
         // set filter state
         setFilterState(filterState: any) {
-            this.filterState = filterState;
+            this.$patch({
+                filterState: filterState
+            })
+            // this.filterState = filterState;
         },
         // set favorites
         setFavorites(favorites: string[]) {
-            this.favorites = favorites;
+            this.$patch({
+                favorites: favorites
+            })
+            // this.favorites = favorites;
         },
         // set pagination
         setPagination(pagination: any) {
-            this.pagination = pagination;
+            this.$patch({
+                pagination: pagination
+            })
         },
         resetFilterState() {
-            this.filterState.breeds = [];
-            this.filterState.zip_codes = [];
-            this.filterState.ageMin = 0;
-            this.filterState.ageMax = 20;
-            this.filterState.size = 10;
-            this.filterState.sortBy = 'Breed';
-            this.filterState.sortDir = 'asc';
-            // this.filterState.sort = 'breed:asc';
-            this.filterState.distance_from = 100;
-        },
-        checkTokenExpiry() {
-            const now = new Date();
-            if (this.session.expiry < now) {
-                this.setUserLoggedOut();
-                this.resetState();
-            }
+            this.$patch({
+                filterState: {
+                    breeds: [],
+                    zip_codes: [],
+                    ageMin: 0,
+                    ageMax: 20,
+                    size: 10,
+                    sortBy: 'Breed',
+                    sortDir: 'asc',
+                    distance_from: 100,
+                }
+            })
+            // this.filterState.breeds = [];
+            // this.filterState.zip_codes = [];
+            // this.filterState.ageMin = 0;
+            // this.filterState.ageMax = 20;
+            // this.filterState.size = 10;
+            // this.filterState.sortBy = 'Breed';
+            // this.filterState.sortDir = 'asc';
+            // this.filterState.distance_from = 100;
         },
         async login(name: string, email: string) {
             try {
+                const expiryInMins = 59;
+                const expiryDate = new Date(Date.now() + 1000 * 60 * expiryInMins);
+
                 const res = await api.login(name, email);
+
                 if (res.status === 200) {
-                    this.setUser({ name, email });
-                    this.session.expiry = new Date(Date.now() + 1000 * 60 * 59);
+                    this.$patch({
+                        session: {
+                            user: { name, email },
+                            expiry: expiryDate,
+                        }
+                    })
 
                     return res;
                 };
@@ -97,12 +128,18 @@ export const useAppStore = defineStore('app', {
             try {
                 const res = await api.logout();
                 if (res.status === 200) {
-                    this.setUserLoggedOut();
+                    this.$patch({
+                        session: {
+                            user: {},
+                            expiry: null,
+                        }
+                    })
+
                     return res;
                 }
             } catch (error) {
                 console.error('Logout failed:', error);
-                // return res;
+                return false;
             }
         },
 
@@ -111,5 +148,6 @@ export const useAppStore = defineStore('app', {
             this.$reset();
         }
     },
+    // pkg installed to persist state across page loads - otherwise state resets
     persist: true,
 })

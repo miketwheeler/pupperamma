@@ -1,4 +1,6 @@
 <template>
+    <!-- <AuthDialog :id="'top-level-auth-invoked'" @update:visible="authDialogVisible" /> -->
+
     <v-container height="calc(100% - 40px)" fluid max-width="1400px">
         <v-row class="fill-height">
             <v-col cols="12" xs="12" sm="4" md="3">
@@ -36,12 +38,36 @@
     </v-container>
 </template>
 
-<script setup lang="ts">
+<script setup>
+import { ref, onMounted, watch, computed } from 'vue';
+import { useAppStore } from '@/stores/app';
+// import AuthDialog from '@/components/menu/AuthDialog.vue';
 import FilterPanel from '@/components/body/FilterPanel.vue';
 import CardGrid from '@/components/body/CardGrid.vue';
-import AppliedFilters from '@/components/menu/AppliedFilters.vue';
+import AppliedFilters from '@/components/body/AppliedFilters.vue';
 
 
-const page = ref(1);
+const appStore = useAppStore();
+const authDialogVisible = ref(false);
+// const isAuthExpired = computed(() => appStore.isAuthExpired);
 
+
+// const showAuthDialog = (isVisible) => {
+//     authDialogVisible.value = isVisible;
+// }
+
+// onMounted(() => {
+//     if (isAuthExpired.value){
+//         console.log('isAuthExpired in default.vue: ', isAuthExpired.value);
+//         showAuthDialog(true);
+//     };
+
+// });
+
+// watch(isAuthExpired, (newValue) => {
+//     if (newValue) {
+//         console.log('isAuthExpired in default.vue: ', newValue);
+//         showAuthDialog(true);
+//     };
+// });
 </script>

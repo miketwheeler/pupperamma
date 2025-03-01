@@ -3,13 +3,13 @@
     <v-select
         v-model="appStore.filterState.breeds"
         :items="breedList"
+        :count="breedsCount"
         label="Breed(s)"
         color="primary"
         variant="solo"
         messages="Select one or more breeds"
-        :count="breedsCount"
-        class="mt-1 opacity-100 mb-2"
         multiple
+        class="mt-1 opacity-100 mb-2"
         >
         <template v-slot:selection="{ item, index }">
             <span v-if="index===0" class="text-grey text-caption align-self-center">
@@ -17,6 +17,10 @@
             </span>
         </template>
     </v-select>
+
+    <v-divider class="my-4" style="width: 80%; justify-self: center;" />
+
+    <div class="text-h6 ml-2 mb-1">Results</div>
     <div style="display: flex; flex-direction: row; gap: 0.5rem;">
         <v-text-field
             v-model="appStore.filterState.ageMin"
@@ -44,10 +48,6 @@
             max="30"
             />
     </div>
-
-    <v-divider class="mb-6" style="width: 80%; justify-self: center;" />
-
-    <div class="text-h6 ml-2 mb-1">Results</div>
     <div style="display: flex; flex-direction: row; gap: 0.5rem;">
         <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: end; gap: 0.5rem;">
             <v-select 
@@ -99,39 +99,47 @@
 
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app';
 import api from '@/services/api';
 
 const appStore = useAppStore();
-const isLoggedIn = computed(() => appStore.session.loggedIn);
+const isAuthExpired = computed(() => appStore !== null && appStore.isAuthExpired);
 const selectedBreeds = ref([]);
 const extraSortByList = ['Breed', 'Name', 'Distance', 'Age'];
 const resultsPerPage = [10, 20, 50, 100];
 
 const breedsCount = computed(() => {
-    // if (!appStore.filterState.breeds) return 0;
     return appStore.filterState.breeds.length || 0;
 });
 
 const breedList = ref<any[]>([]);
 
 
-
 onMounted(async () => {
-    const breeds: any = await api.getBreeds();
-    breedList.value = breeds.data;
-    // console.log('breedsList', breedList.value);
-})
+    if (isAuthExpired.value) return;
 
-watch(isLoggedIn, async (newValue) => {
-    if (newValue) {
+    try {
         const breeds: any = await api.getBreeds();
         breedList.value = breeds.data;
-        // console.log('breedsList', breedList.value);
+    } catch (error) {
+        console.error('Error fetching breeds', error);
+    }
+})
+
+watch(isAuthExpired, async (newValue) => {
+    if (newValue) return;
+    
+    try {
+        const breeds: any = await api.getBreeds();
+        breedList.value = breeds.data;
+    } catch (error) {
+        console.error('Error fetching breeds', error);
     }
 })
 watch(selectedBreeds, (newValue) => {
+    if (newValue) return;
+
     appStore.setFilterState({
         breeds: selectedBreeds.value,
     });

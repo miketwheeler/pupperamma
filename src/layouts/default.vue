@@ -2,7 +2,6 @@
   <v-main>
     <Appbar />
     <CustomSnackbar />
-    <!-- <AuthDialog :id="'top-level-auth-invoked'" @update:visible="authDialogVisible" /> -->
     <router-view />
   </v-main>
 
@@ -12,21 +11,17 @@
 <script setup>
 import Appbar from '@/components/Appbar.vue';
 import CustomSnackbar from '@/components/menu/CustomSnackbar.vue';
-import AuthDialog from '@/components/menu/AuthDialog.vue';
-import { ref, onMounted, watch, computed } from 'vue';
+import { onMounted } from 'vue';
 import { useAppStore } from '@/stores/app';
+import { useRouter } from 'vue-router';
 
 const appStore = useAppStore();
-const authDialogVisible = ref(false);
-const isLoggedIn = computed(() => appStore.session.loggedIn);
+const router = useRouter();
 
-// const showAuthDialog = (isVisible) => {
-//     authDialogVisible.value = isVisible;
-// }
+onMounted(() => {
+  if (appStore.isAuthExpired && router.currentRoute.value.path !== '/login') {
+    router.replace('/login');
+  }
+});
 
-// onMounted(() => {
-//     if (!isLoggedIn.value) {
-//         showAuthDialog(true);
-//     }
-// });
 </script>
