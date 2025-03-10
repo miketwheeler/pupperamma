@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia';
-import api from '@/services/api';
-import { useRouter } from 'vue-router';
+import api, { type Locations, type SearchResults } from '@/services/api';
+
 
 // mock 'session'
 type User = {
@@ -9,96 +9,69 @@ type User = {
     email: string,
 };
 
+interface StateZips {
+    key: string;
+    zips: string[];
+}
+
 export const useAppStore = defineStore('app', {
     state: () => ({
         // user
         session: {
             user: {} as User,
-            // loggedIn: false,
             expiry: null as Date | null,
         },
-        // filter state
+        // filter params state
         filterState: {
             breeds: [] as string[],
-            zip_codes: [],
             ageMin: 0,
             ageMax: 20,
             size: 10,
             sortBy: 'Breed',
             sortDir: 'asc',
-            distance_from: 100,
         },
-        // favorites state
-        favorites: [] as string[],
-        // matched
-        matchedPooch: "" as string,
+        // location data
+        // locationData: {
+        //     stateAbbrvs: [] as string[],
+        //     allStateAbrvAndZips: [] as StateZips[],
+        //     loc_size: 100,
+        //     loc_from: 0,
+        //     isInitialRun: true,
+        //     remainderDogSearchResponse: [] as string[],
+        // },
+        // potentialDogLocations: {} as Locations,
+        userGeoData: {
+            postcode:  "" as string, // ie zip code
+            state: "" as string, // FULL state name
+            lat: 0,
+            lon: 0,
+        },
         // pagination
         pagination: {
-            from: 1,
-        }
+            pageNum: 1,
+            total: 0,
+        },
+        // favorites state
+        favoritesList: [] as string[],
+        prevFavoritesList: [] as string[],
+        // matched
+        matchedPooch: "" as string,
+        matchRevealed: false,        
     }),
     getters: {
         isAuthExpired: (state) => {
             // true if expired, false if not
-            if (!state.session.expiry) {
-                return true;
-            }
+            if (!state.session.expiry) return true;
+            
             return new Date(state.session.expiry) < new Date();
         },
+        isUserGeoDataEmpty: (state) => {
+            // if any are empty returns true (false to refetch)
+            return !state.userGeoData.postcode || !state.userGeoData.state || state.userGeoData.lat === 0 || state.userGeoData.lon === 0;
+        },        
     },
     actions: {
-        // set user
-        // setUser(user: User) {
-        //     this.session.user = user;
-        //     // this.session.loggedIn = true;
-        // },
-        // setUserLoggedOut() {
-        //     this.session.user = {} as User;
-        //     // this.session.loggedIn = false;
-        //     this.session.expiry = null;
-        // },
-        // set filter state
-        setFilterState(filterState: any) {
-            this.$patch({
-                filterState: filterState
-            })
-            // this.filterState = filterState;
-        },
-        // set favorites
-        setFavorites(favorites: string[]) {
-            this.$patch({
-                favorites: favorites
-            })
-            // this.favorites = favorites;
-        },
-        // set pagination
-        setPagination(pagination: any) {
-            this.$patch({
-                pagination: pagination
-            })
-        },
-        resetFilterState() {
-            this.$patch({
-                filterState: {
-                    breeds: [],
-                    zip_codes: [],
-                    ageMin: 0,
-                    ageMax: 20,
-                    size: 10,
-                    sortBy: 'Breed',
-                    sortDir: 'asc',
-                    distance_from: 100,
-                }
-            })
-            // this.filterState.breeds = [];
-            // this.filterState.zip_codes = [];
-            // this.filterState.ageMin = 0;
-            // this.filterState.ageMax = 20;
-            // this.filterState.size = 10;
-            // this.filterState.sortBy = 'Breed';
-            // this.filterState.sortDir = 'asc';
-            // this.filterState.distance_from = 100;
-        },
+        // auth
         async login(name: string, email: string) {
             try {
                 const expiryInMins = 59;
@@ -118,7 +91,6 @@ export const useAppStore = defineStore('app', {
                 };
 
                 return res;
-
             } catch (error) {
                 console.error('Login failed:', error);
                 return false;
@@ -142,8 +114,125 @@ export const useAppStore = defineStore('app', {
                 return false;
             }
         },
+        // set filter state
+        // setFilterState(filterState: any) {
+        //     this.$patch({
+        //         filterState: filterState
+        //     })
+        // },
+        setFilterBreeds(breeds: string[]) {
+            this.filterState.breeds = breeds;
+        },
+        // set favorites
+        setFavorites(favorites: string[]) {
+            this.$patch({
+                favoritesList: favorites
+            })
+            if (!this.favoritesList.includes(this.matchedPooch)) {
+                this.$patch({ matchedPooch: "" });
+                this.setMatchRevealed(false);
+            }
+        },
+        setMatchRevealed(revealed: boolean) {
+            this.matchRevealed = revealed;
+        },
+        setPreviousFavorites(prevFavorites: string[]) {
+            this.prevFavoritesList = prevFavorites;
+        },
+        // set pagination
+        setResultsPerPage(size: number) {
+            this.filterState.size = size;
+            // this.locationData.loc_size = size;
+        },
+        setPagination(page: number) {
+            this.pagination.pageNum = page;
+        },
+        // set user geo & location-related data
+        setUserGeoData(geoData: any) {
+            this.$patch({
+                userGeoData: {
+                    postcode: geoData.postcode,
+                    state: geoData.state,
+                    lat: geoData.lat,
+                    lon: geoData.lon,
+                }
+            })
+        },
+        // setFilterZipCodeData(zipCodeData: string[]) {
+        //     this.filterState.zipCodes = zipCodeData;
+        // },
+        // setStateAbbrvs(stateAbbrvs: string[]) {
+        //     this.locationData.stateAbbrvs = stateAbbrvs;
 
-        // reset state
+        //     const newStateZips: StateZips[] = [];
+
+        //     for (const abbr of stateAbbrvs) {
+        //         const existing = this.locationData.allStateAbrvAndZips.find((entry) => entry.key === abbr);
+        //         if (existing) {
+        //             newStateZips.push(existing);
+        //         } else {
+        //             newStateZips.push({ key: abbr, zips: [] });
+        //         }
+        //     }
+        //     this.locationData.allStateAbrvAndZips = newStateZips;
+        // },
+        // setPotentialDogLocations(dogLocations: Locations) {
+        //     this.potentialDogLocations = dogLocations;
+
+        //     if (this.potentialDogLocations.results.length > 0) {
+        //         for (const stateZipEntry of this.locationData.allStateAbrvAndZips) {
+        //             const matchingZipList = this.potentialDogLocations.results
+        //                 .filter((loc: any) => loc.state === stateZipEntry.key)
+        //                 .map((loc: any) => loc.zip_code);
+
+        //             stateZipEntry.zips = matchingZipList;
+        //         }
+        //     }
+        //     else {
+        //         this.locationData.allStateAbrvAndZips = [];
+        //     }
+        // },
+        // set location data
+        // setZipCodeData(zipCodeData: string[]) {
+        //     this.$patch({
+        //         locationData: {
+        //             zipCodes: zipCodeData,
+        //         }
+        //     })
+        // },
+        // setStateAbbrvData(stateAbbrvData: string[]) {
+        //     this.$patch({
+        //         locationData: {
+        //             stateAbbrvs: stateAbbrvData,
+        //         }
+        //     })
+        // },
+         // reset filter and location states
+        resetFilterState() {
+            this.$patch({
+                filterState: {
+                    breeds: [],
+                    // zipCodes: [],
+                    ageMin: 0,
+                    ageMax: 20,
+                    size: 10,
+                    sortBy: 'Breed',
+                    sortDir: 'asc',
+                }
+            })
+            this.$patch({
+                pagination: {
+                    pageNum: 1,
+                }
+            })
+            // this.$patch({
+            //     locationData: {
+            //         stateAbbrvs: [],
+            //         allStateAbrvAndZips: [],
+            //     }
+            // })
+        },
+        // reset all states
         resetState() {
             this.$reset();
         }

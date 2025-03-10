@@ -23,5 +23,9 @@ onMounted(() => {
     router.replace('/login');
   }
 });
-
+watch(() => appStore.isAuthExpired, (newValue) => {
+  if (newValue && router.currentRoute.value.path !== '/login') {
+    router.replace('/login');
+  }
+});
 </script>

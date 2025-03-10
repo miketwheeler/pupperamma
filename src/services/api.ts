@@ -1,6 +1,5 @@
 import axios from "axios";
 
-
 export interface Dog {
     id: string,
     img: string,
@@ -17,12 +16,16 @@ interface Location {
     state: string,
     county: string,
 }
+export interface Locations {
+    results: Location[],
+    total: number
+}
 interface Coordinates {
     lat: number,
     long: number
 }
 
-interface SearchResults {
+export interface SearchResults {
     resultIds: string[],
     total: number,
     next: string,
@@ -37,7 +40,7 @@ const apiClient = axios.create({
     headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Credentials": "true",
-    },
+    }
 });
 
 export default {
@@ -45,15 +48,14 @@ export default {
     async login(name: string, email: string) {
         return await apiClient.post("/auth/login", { name, email });
     },
-
     // 🫡 post logout - (base)/auth/logout
     async logout() {
         return await apiClient.post("/auth/logout");
     },
 
     // 🫡 get - (base)/dogs/breeds, res -> array of breed names
-    async getBreeds() {
-        return await apiClient.get("/dogs/breeds");
+    async getBreeds(): Promise<string[]> {
+        return await apiClient.get("/dogs/breeds").then(res => res.data);
     },
 
     // 🫡 get - (base)/dogs/search
@@ -67,24 +69,27 @@ export default {
     //         prev: a query to req next page of results (if exists)
     //     } 
     //   *max # of total dogs matched per query is 10k
-    async searchDogs(
-        breeds?: string[], 
-        zipCodes?: string[], 
-        ageMin: number = 0, 
-        ageMax: number = 1000, 
-        size: number = 25, 
-        from: number = 0, 
-        sort: string = 'breed:asc'
-    ) {
-        return await apiClient.get("/dogs/search", {
-            params: { breeds, zipCodes, ageMin, ageMax, size, from, sort }
-        });
+    // async searchDogs(
+    //     breeds?: string[], 
+    //     zipCodes?: string[], 
+    //     ageMin: number = 0, 
+    //     ageMax: number = 1000, 
+    //     size: number = 10, 
+    //     from: number = 0, 
+    //     sort: string = 'breed:asc'
+    // ): Promise<SearchResults> {
+    //     return await apiClient.get("/dogs/search", {
+    //         params: { breeds, zipCodes, ageMin, ageMax, size, from, sort }
+    //     }).then(res => res.data);
+    // },
+    async searchDogs(params: any): Promise<SearchResults> {
+        return await apiClient.get("/dogs/search", {params}).then(res => res.data);
     },
 
     // 🫡 post - (base)/dogs
     // body: { string[] }  length <=100 ids, res: dog objs
     async getDogsByIds(idList: string[]): Promise<Dog[]> {
-        return await apiClient.post("/dogs", idList);
+        return await apiClient.post("/dogs", idList).then(res => res.data);
     },
 
     // 🫡 post - (base)/dogs/match
@@ -95,44 +100,7 @@ export default {
     },
 
     // post - (base)/locations/search
-    // body: {
-    //     city?: string,
-    //     states?: string[],
-    //     geoBoundingBox?: {
-    //         top?: Coordinates,
-    //         left?: Coordinates,
-    //         bottom?: Coordinates,
-    //         right?: Coordinates,
-    //         bottom_left?: Coordinates,
-    //         top_left?: Coordinates
-    //     },
-    //     size?: number,
-    //     from?: number
-    // }
-    // -> res: {
-    //     results: Location[],
-    //     total: number
-    // }
-    async searchLocations(
-        city?: string | null,
-        states?: string[] | null,
-        geoBoundingBox?: {
-            top?: Coordinates,
-            left?: Coordinates,
-            bottom?: Coordinates,
-            right?: Coordinates,
-            bottom_left?: Coordinates,
-            top_left?: Coordinates
-        } | null,
-        size?: number, // defaults to 25 if omitted
-        from?: number // optional - for pagination
-    ): Promise<Location[] & number> {
-        return await apiClient.post("/locations/search", {
-            city,
-            states,
-            geoBoundingBox,
-            size,
-            from
-        });
+    async searchLocations(params: any): Promise<Locations> {
+        return await apiClient.post("/locations/search", params).then(res => res.data);
     }
 }

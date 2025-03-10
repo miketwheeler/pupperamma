@@ -2,7 +2,7 @@
     <v-container>
         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <div class="text-h4 my-5"> Looks like you need to log in!</div>
-            <v-card width="500">
+            <v-card width="400">
                 <v-card-title>
                     <div style="display: flex; justify-content: space-between;">
                         <div>Login</div>
@@ -42,7 +42,7 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn 
-                        color="secondary" 
+                        color="primary" 
                         type="submit"
                         variant="flat"
                         @click="onSubmit"
@@ -68,7 +68,7 @@ const valid = ref(false);
 const name = ref('');
 const email = ref('');
 const isLoading = ref(false);
-const isAuthExpired = computed(() => appState !== null && appState.isAuthExpired)
+// const isAuthExpired = computed(() => appState !== null && appState.isAuthExpired)
 
 // validation rules
 const nameRules = [
