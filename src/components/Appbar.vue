@@ -2,7 +2,7 @@
 
     <!-- Primary AppBar -->
     <v-app-bar flat height="64" color="surface">
-        <v-container fluid max-width="1400px" class="d-flex justify-space-between align-center py-0 ma-0">
+        <v-container fluid max-width="1400px" class="d-flex justify-space-between align-center py-0 pr-0">
             <v-app-bar-title style="max-width:1400px">
                 <v-btn
                     variant="text" 
@@ -86,7 +86,7 @@
 
     <!-- Second Toolbar-appbar -->
     <v-toolbar class="px-4" color="primary" style="position: sticky; top: 64px; z-index: 100;" flat>
-        <v-container v-if="!isAuthExpired" fluid max-width="1400px" class="d-flex justify-space-between align-center hidden-sm-and-down">
+        <v-container v-if="!isAuthExpired" fluid max-width="1400px" class="d-flex justify-space-between align-center hidden-sm-and-down px-6">
             <div v-if="!isUserGeoDataEmpty" class="d-flex align-center justify-content-center">
                 <div style="display: flex; flex-direction: row; align-items: center;">
                     <b><strong>{{ locRef?.state }}, {{ locRef?.postcode }}</strong></b><v-icon class="ml-1">mdi-map-marker-radius</v-icon>
@@ -95,7 +95,6 @@
             <v-spacer />
             <div class="text-h7 d-none d-sm-block">Hi, <strong>{{ appStore.session.user.email }}</strong></div>
         </v-container>
-
     </v-toolbar>
 
     <!-- Auth Dialog -->
