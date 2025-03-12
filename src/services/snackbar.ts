@@ -6,7 +6,7 @@ export const snackbarState = reactive({
     color: 'white',
 });
 
-// trigger fn
+// trigger and asssign param values to the snackbar
 export const showSnackbar = (message: string, color: string) => {
     snackbarState.visible = true;
     snackbarState.text = message;

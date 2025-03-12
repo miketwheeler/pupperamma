@@ -2,14 +2,14 @@
 
     <!-- Primary AppBar -->
     <v-app-bar flat height="64" color="surface">
-        <v-container fluid max-width="1400px" class="d-flex justify-space-between align-center">
+        <v-container fluid max-width="1400px" class="d-flex justify-space-between align-center py-0 ma-0">
             <v-app-bar-title style="max-width:1400px">
                 <v-btn
                     variant="text" 
                     color="text" 
                     href="/"
                     size="xl"
-                    style="display: flex; align-items: center; width: fit-content; padding: 0; margin: 0; text-transform: none;"
+                    style="width: fit-content; text-transform: none;"
                     >
                     <strong>Pupperamma</strong>
                     <v-icon color="text" class="ml-2">mdi-dog</v-icon>
@@ -17,7 +17,7 @@
             </v-app-bar-title>
 
             <!-- Displays the >=sm screen appbar items -->
-            <div class="d-none d-sm-flex hidden-sm-and-down" style="display: flex; flex-direction: row; align-items: center;">
+            <div class="d-none d-sm-flex hidden-sm-and-down flex-row align-center" >
                 <v-btn solo-inverted :icon="theme.global.name.value === 'light' ? 'mdi-weather-night' : 'mdi-weather-sunny'" @click="toggleTheme" />
                 <v-btn 
                     :disabled="isAuthExpired"
@@ -39,7 +39,7 @@
             </div>
 
             <!-- Toggle mobile drawer only on <=sm screens (mobile drawer below) -->
-            <div class="d-flex d-sm-none" style="display: flex; flex-direction: row; align-items: center;">
+            <div class="d-flex d-sm-none flex-row align-center" >
                 <v-btn :disabled="isAuthExpired" icon="mdi-menu" @click="toggleMobileDrawer"></v-btn>
             </div>
 
@@ -48,13 +48,13 @@
 
     <!-- Mobile Drawer -->
     <v-navigation-drawer
-        class="d-flex d-sm-none"
         v-model="mobileDrawer"
         disable-route-watcher
-        location="right"
-        app
-        color="surface"
         clipped
+        app
+        class="d-flex d-sm-none"
+        location="right"
+        color="surface"
         temporary
         width="220"
         >
@@ -72,15 +72,15 @@
         <v-list-item
             :prepend-icon="theme.global.name.value === 'light' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
             :title="theme.global.name.value === 'light' ? 'Dark Mode' : 'Light Mode'"
-            slim
             @click="toggleTheme"
+            slim
             /> 
         <v-list-item
             prepend-icon="mdi-logout"
             id="drawer-logout"
-            color="primary"
             @click="showAuthDialog(true)"
             title="Log out"
+            color="primary"
             />
     </v-navigation-drawer>
 
@@ -107,7 +107,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useTheme } from 'vuetify';
 import { useAppStore } from '@/stores/app';
 import { useRouter } from 'vue-router';
-import AuthDialog from '@/components/menu/AuthDialog.vue';
+import AuthDialog from '@/components/menu/LogoutDialog.vue';
 
 
 const appStore = useAppStore();
@@ -117,7 +117,7 @@ const theme = useTheme();
 const mobileDrawer = ref(false);
 const authDialogVisible = ref(false);
 const currentRoute = computed(() => router.currentRoute.value.path);
-const isUserGeoDataEmpty = computed(() => appStore.userGeoData);
+const isUserGeoDataEmpty = computed(() => appStore.isUserGeoDataEmpty);
 const locRef = computed(() => appStore.userGeoData);
 const isAuthExpired = computed(() => appStore.isAuthExpired);
 

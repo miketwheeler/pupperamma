@@ -7,7 +7,7 @@
         </v-col>
         <v-col v-if="!loading && props && props.page === 'favorites'" cols="12" class="mt-3">
             <div class="text-h5 font-weight-bold">
-                You have {{ favoritesLength || 0 }} Favorites!
+                You have {{ favoritesLength || 0 }} {{ favoritesLength === 1 ? "Favorite": "Favorites" }}!
             </div>
             <v-btn v-if="favoritesLength === 0" append-icon="mdi-home" to="/" color="primary" class="mt-8">
                 Home page
@@ -17,16 +17,19 @@
     <v-row>
         <v-col cols="12" class="d-flex flex-wrap justify-center">
 
-            <div v-if="loading" class="d-flex justify-center align-center" style="width: 100%; height: 100%;">
+            <!-- loading results indicator -->
+            <div v-if="loading" class="d-flex justify-center align-center w-100 h-100">
                 <v-progress-circular indeterminate color="primary" size="64" width="4" />
             </div>
 
-            <div v-if="!loading && cardListDogItems && cardListDogItems.length === 0 " class="d-flex justify-center align-center" style="width: 100%; height: 100%;">
+            <!-- present 'no results' if filter yields none -->
+            <div v-if="!loading && !cardListDogItems?.length" class="d-flex justify-center align-center w-100 h-100">
                 <div class="text-h5 font-weight-bold">
                     No dogs found here. Please try a different filter.
                 </div>
             </div>
 
+            <!-- othewise loop and display the dog data in a card grid -->
             <v-card 
                 v-else 
                 v-for="card in cardStack" 
@@ -60,8 +63,8 @@
                     </div>
                 </v-img>
                 <v-card-title>{{ card.name }}</v-card-title>
-                <v-card-text>
-                    {{ card.breed }}&nbsp; |&nbsp; {{ card.age }}yo&nbsp; |&nbsp; Zipcode {{ card.zip_code }}
+                <v-card-text class="d-flex flex-row flex-wrap ga-6">
+                    {{ card.breed }} | {{ card.age > 0 ? card.age : "N/A" }} {{ card.age < 1 ? "" : card.age === 1 ? "yr old" : "yrs old" }} | Zipcode {{ card.zip_code }}
                 </v-card-text>
             </v-card>
         </v-col>
@@ -118,8 +121,8 @@ const appStore = useAppStore();
 
 // card management
 const cardStack = ref<Card[]>([]);
-const dogsSearchResponse = ref<SearchResults | null>(null);
-const cardListDogItems = ref<Dog[] | null>(null);
+const dogsSearchResponse = ref<SearchResults>();
+const cardListDogItems = ref<Dog[]>();
 
 // pagination
 const totalResults = computed(() => appStore.pagination.total); // either total '/location/search' total or '/dogs/search' total
@@ -136,13 +139,7 @@ const favoritesLength = computed(() => appStore.favoritesList.length || 0);
 const isAuthExpired = computed(() => appStore.isAuthExpired);
 const loading = ref(false);
 //////////////////////////////////////////////////////////////////
-
-// figuring out location approach
-const locationsByState = ref<number>(0);
-const currentLocationMarker = ref<number>(0);
-// const locationRangeEnd = computed(() => Math.min(appStore.locationData.locSampleWindowWidth * appStore.pagination.pageNum, totalResults.value));
 //#endregion
-
 
 // updates the pagination state var -> appStore.pagination.pageNum & scrolls to top
 const updatePagination = async (pageNum: number) => {
@@ -155,62 +152,82 @@ const setFavorite = (event: MouseEvent, id: string, liked: boolean) => {
     // if on the home page
     if (props && props.page !== 'favorites') {
         if (liked) {
+            // add to the rolling list
             appStore.setFavorites([...appStore.favoritesList, id]);
+
+            // always reset on additions - since pool to generate from has changed
+            appStore.matchedPup = "";
+            appStore.setMatchRevealed(false);
         } else {
+            const wasMatched = appStore.matchedPup === id;
+            // remove from the rolling list
             appStore.setFavorites(appStore.favoritesList.filter((item) => item !== id));
+
+            // if the one removed was the state's matched, reset
+            if (wasMatched) {
+                appStore.matchedPup = "";
+                appStore.setMatchRevealed(false);
+            }
         }
     } else {
-        // if removed on the favorites page, need to remove fromt the stack
+        // if removed on the favorites page, need to remove fromt the dysplay stack
         if(appStore.favoritesList.includes(id) && !liked) {
             appStore.setFavorites(appStore.favoritesList.filter((itemId) => itemId !== id));
             cardStack.value = cardStack.value.filter((item) => item.id !== id);
-        }
-        if(appStore.favoritesList.length === 0) {
-            appStore.setPreviousFavorites([]);
-            cardStack.value = [];
         }
     }
 
     showSnackbar(`Favorites updated! You now have ${appStore.favoritesList.length} favorites.`, 'primary');
 }
 
-// '/locations/search'
-// const getZipCodesFromStateAbbrvs = async () => {
-//     try {
-//         const useSize = appStore.locationData.loc_size; // if not the initial run, use the size from the filter
-//         const useFrom = appStore.locationData.loc_from; // if not the initial run, use the from from the filter
+// populates the card stack with the dog data - for rendering the cards
+const populateCards = async (liked?: boolean) => {
+    if (!cardListDogItems.value) {
+        showSnackbar('Something went wrong loading dog data. Please try again.', 'warning');
+        return 
+    };
 
-//         const params: any = {
-//             states: appStore.locationData.stateAbbrvs,
-//             size: useSize,  // starts as same as 'size' filter, if < size dogs, is doubled and refetched
-//             from: useFrom,
-//         }       
+    cardStack.value = cardListDogItems.value.map((dog) => ({
+        id: dog.id,
+        img: dog.img,
+        name: dog.name,
+        age: dog.age,
+        breed: dog.breed,
+        zip_code: dog.zip_code,
+        liked: liked ? liked : appStore.favoritesList.includes(dog.id)
+    }));
+}
 
-//         const potentialLocations = await api.searchLocations(params);
+// req to populate the favorites page 
+const getFavoritedDogs = async () => {
+    loading.value = true;
+    cardStack.value = [];
 
-//         if (!potentialLocations) {
-//             showSnackbar('No locations found. Please try a different filter parameter.', 'warning');
-//             return null
-//         };
+    try {
+        // get the dog data list - using the stashed favorites list of dog ids
+        cardListDogItems.value = await api.getDogsByIds(appStore.favoritesList)
 
-//         console.log('location window width: ', useFrom, " to ", useSize, "total: ", potentialLocations.total);
+        if (!cardListDogItems.value) { 
+            showSnackbar('Something went wrong displaying your favorites.', 'warning');   
+            return
+        };
 
-//         // ***in state, set the location data of the POTENTIAL dog locations
-//         // parse out the zip codes per stateAbbrv & assign to filterState's zipCodes var
-//         appStore.setPotentialDogLocations(potentialLocations)
+        // render favorited dog cards
+        await populateCards(true);
 
-//     } catch (error) {
-//         console.error('Error fetching locations:', error);
-//     }
-// }
+    } catch (error) {
+        console.error('Error fetching dogs:', error);
+    } finally {
+        loading.value = false;
+    }
+}
 
-const searchDogs = async (zipArrStart?: number, zipArrEnd?:number) => {
+// search using fliter params -> returns list of ids and total potential results (indep of current size-window))
+const searchDogs = async () => {
     try {        
-        // get the search response data for the page ref (resultIds string[], total, next, prev)
-        // const allZips = appStore.locationData.allStateAbrvAndZips.flatMap((entry: any) => entry.zips || []);
-        // console.log('allZips.length: ', allZips.length);
         const allZips: string[] = []
 
+        // use the filter params in state to filter /search results (just -> ids, total (not size))
         const params: any = {
             breeds: appStore.filterState.breeds,
             zipCodes: allZips,
@@ -222,151 +239,68 @@ const searchDogs = async (zipArrStart?: number, zipArrEnd?:number) => {
         }
 
         // store the list of dog ids from the response
-        dogsSearchResponse.value = await api.searchDogs(params);
-
-        // if(appStore.locationData.stateAbbrvs.length > 0) {
-        //     // while ()
-        // }
-        console.log('dogsSearchRespons total: ', dogsSearchResponse.value.total);
-
-        // if there's locational data, card render qty (size) will need to track the total from the location mixin
-        // if(!appStore.locationData.allStateAbrvAndZips.length) 
-        appStore.pagination.total = dogsSearchResponse.value.total;
+        return await api.searchDogs(params);
 
     } catch (error) {
         console.error('Error searching for dogs:', error);
     }
 }
 
+// fetch dog data -> returns list of ids
 const getDogsByIds = async () => {
     try {
         if (!dogsSearchResponse.value) {
             showSnackbar('No dogs found for this search. Please try a different filter parameter.', 'warning');
-            return null
+            return
         };
 
-        // const allDogIds = [...appStore.locationData.remainderDogSearchResponse, ...dogsSearchResponse.value.resultIds];
-        const allDogIds = dogsSearchResponse.value.resultIds;
+        // uses the stashed dog id list to get all dogs by ids
+        return await api.getDogsByIds(dogsSearchResponse.value.resultIds);
 
-        // cardListDogItems.value = await api.getDogsByIds(allDogIds.slice(0, appStore.filterState.size));
-
-        cardListDogItems.value = await api.getDogsByIds(dogsSearchResponse.value.resultIds);
-
-        // TODO: assess if needed
-        if (!cardListDogItems.value) {
-            showSnackbar('Something went wrong getting those results. Please try again.', 'warning');
-            return null
-        };
-
-        // console.log('getDogsByIds.length: ', cardListDogItems.value.length);
-
-        // return dogs;
     } catch (error) {
         console.error('Error fetching dogs by ids:', error);
     }
 }
 
+// call to hit both searchDogs and getDogsByIds -> returns dog data list
 const getTheDogGoneData = async () => {
     try {
          // always make the search request
-        await searchDogs();
+        dogsSearchResponse.value = await searchDogs();
 
-        await getDogsByIds();
+        // set the pagination total value to the total results from the search (this is leveraged for dynamic pagination-)
+        appStore.pagination.total = dogsSearchResponse.value?.total || 1;
+
+        if (!dogsSearchResponse.value) {
+            showSnackbar('No dogs found for this search. Please try again.', 'warning');
+            return
+        };
+
+        // get the id list returned by the search
+        cardListDogItems.value = await getDogsByIds() || [];
+
     } catch (error) {
         console.error('Error searching for dogs:', error);
     }
 }
 
-const populateCards = () => {
-    if (!cardListDogItems.value) return;
-
-    // if(appStore.locationData.allStateAbrvAndZips.length > 0) 
-    //     appStore.pagination.total = cardListDogItems.value.length;
-
-    // finally - map the data to the card stack for rendering
-    cardStack.value = cardListDogItems.value.map((dog) => ({
-        id: dog.id,
-        img: dog.img,
-        name: dog.name,
-        age: dog.age,
-        breed: dog.breed,
-        zip_code: dog.zip_code,
-        liked: appStore.favoritesList.includes(dog.id)
-    }));
-}
-
 // req to get all dogs to populate the card stack. 
 const getDogs = async () => {
     loading.value = true;
-    cardStack.value = [];
+    cardStack.value = []; // reset rendered cards on state changes/refetching
 
     try {
-        // if (appStore.locationData.stateAbbrvs.length > 0) {
-        //     console.log("is locations!")
-
-        //     await getZipCodesFromStateAbbrvs();
-        //     await searchDogs();
-
-        //     if(!dogsSearchResponse.value) return;
-
-            // while (dogsSearchResponse.value.total <= appStore.filterState.size) {
-            //     // appStore.locationData.loc_size = appStore.locationData.loc_size + appStore.filterState.size; // Start: 20 +filter size
-            //     appStore.locationData.loc_size += 100;
-
-            //     console.log("while loop- loc_size: ", appStore.locationData.loc_size);
-
-            //     await getZipCodesFromStateAbbrvs();
-            //     await searchDogs();
-            // }
-
-            // appStore.locationData.loc_from = appStore.locationData.loc_size; // increase to the now-from value upto the last size
-            // appStore.locationData.loc_size = Math.min(appStore.filterState.size, appStore.potentialDogLocations.total); // reset loc_size to the original size
-
-            // console.log('dogIds pre-remainder: ', dogsSearchResponse.value.resultIds);
-            // const remainder = dogsSearchResponse.value.resultIds.slice(appStore.filterState.size);
-            // console.log('remainder after loop: ', remainder);
-            
-            // appStore.locationData.remainderDogSearchResponse = remainder; // store the remaining dog ids for later
-
-            // console.log("endWhile-loc_size: ", appStore.locationData.loc_size, "endWhile-loc_from: ", appStore.locationData.loc_from);
-
-            // await getDogsByIds();
-
-        // if(appStore.locationData.stateAbbrvs.length && cardListDogItems.value && cardListDogItems.value.length < appStore.filterState.size) {
-        //     while(cardListDogItems.value.length < appStore.filterState.size) {
-
-        //         // appStore.locationData.locSampleWindowWidth += appStore.filterState.size // add size-more to the window width
-        //         // console.log("while in loc loop - window: ", appStore.locationData.locSampleWindowWidth, 'size filter: ', appStore.filterState.size);
-        //         // await getZipCodesFromStateAbbrvs();
-        //         // await getTheDogGoneData();
-        //     }
-        // } else {
-            // console.log("no locations!")
-            // await getTheDogGoneData();
-        // }
-
+        // get the dog data list
         await getTheDogGoneData();
 
-        // appStore.locationData.loc_from = 0;
-        // appStore.locationData.loc_size = appStore.filterState.size;
+        if(!cardListDogItems.value) {
+            showSnackbar('No dogs found for this search. Please try a different filter parameter.', 'warning');
+            return
+        };
 
-        populateCards();
+        // for rendering the current stack of dog data
+        await populateCards();
 
-        // if (!cardListDogItems.value) return;
-
-        // if(appStore.locationData.allStateAbrvAndZips.length > 0) 
-        //     appStore.pagination.total = cardListDogItems.value.length;
-
-        // // finally - map the data to the card stack for rendering
-        // cardStack.value = cardListDogItems.value.map((dog) => ({
-        //     id: dog.id,
-        //     img: dog.img,
-        //     name: dog.name,
-        //     age: dog.age,
-        //     breed: dog.breed,
-        //     zip_code: dog.zip_code,
-        //     liked: appStore.favoritesList.includes(dog.id)
-        // }));
     } catch (error) {
         console.error('Error fetching dogs:', error);
     } finally {
@@ -374,67 +308,21 @@ const getDogs = async () => {
     }
 }
 
-// req to populate the favorites page 
-const getFavoritedDogs = async () => {
-    loading.value = true;
-    cardStack.value = [];
-
-    try {
-        cardListDogItems.value = await api.getDogsByIds(appStore.favoritesList)
-
-        if (!cardListDogItems.value) return;
-        
-        cardStack.value = cardListDogItems.value.map((dog) => ({
-            id: dog.id,
-            img: dog.img,
-            name: dog.name,
-            age: dog.age,
-            breed: dog.breed,
-            zip_code: dog.zip_code,
-            liked: true, // appStore.favoritesList.includes(dog.id) ? true : false
-        }));
-    } catch (error) {
-        console.error('Error fetching dogs:', error);
-    } finally {
-        loading.value = false;
-    }
-}
 
 // if page is home, get the dogs, else get the favorited dogs
 onMounted(async () => {
     if(!isAuthExpired.value) {
-        console.log('onMounted called')
         if(props?.page === 'home') await getDogs();
         if(props?.page === 'favorites') await getFavoritedDogs();
     }
 })
 
-// watch for changes in the state-abbrv selection portion of the filter
-// watch([
-//     () => appStore.locationData.stateAbbrvs, 
-// ], async (newValue, oldValue) => {
-//     // console.log('watcher (stateAbbrvs) triggered')
-//     if (!isAuthExpired.value && props?.page === 'home') {
-
-//         cardStack.value = [];
-
-//         // if (newValue.length > 0) {
-//         //     await getZipCodesFromStateAbbrvs();
-//         //     // await setFilterStateZips();
-//         // }
-
-//         // if the state-abbrvs selection is emptied, refectch base
-//         await getDogs();
-//     }
-// }, { deep: true, immediate: false})
-
-// watch for changes in the filter state, pagination and auth combined
+// watch for changes in the filter state, pagination, and auth state
 watch([
     () => appStore.filterState,
     () => appStore.pagination,
     isAuthExpired, 
 ], async (newValues, oldValues) => {
-    // console.log('watcher (filter/pagination) triggered')
     if (!isAuthExpired.value && props && newValues) {
         if (props.page === 'home') 
             await getDogs();

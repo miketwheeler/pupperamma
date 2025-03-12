@@ -1,6 +1,10 @@
 <template>
+
+    <!-- render the login page -->
     <Login />
+    
 </template>
+
 
 <script lang="ts" setup>
 import Login from '@/components/Login.vue';

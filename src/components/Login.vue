@@ -3,12 +3,14 @@
         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <div class="text-h4 my-5"> Looks like you need to log in!</div>
             <v-card width="400">
+
                 <v-card-title>
                     <div style="display: flex; justify-content: space-between;">
                         <div>Login</div>
                         <v-spacer />
                     </div>   
                 </v-card-title>
+
                 <v-card-text>
                     <v-form ref="formModel" lazy-validation v-model="valid" @submit.prevent="onSubmit">
                         <v-row>
@@ -37,12 +39,14 @@
                             </v-col>
                         </v-row>              
                     </v-form>
-
                 </v-card-text>
+
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn 
                         color="primary" 
+                        :loading="isLoading"
+                        :disabled="!valid || isLoading"
                         type="submit"
                         variant="flat"
                         @click="onSubmit"
@@ -50,13 +54,14 @@
                         Login
                     </v-btn>
                 </v-card-actions>
+
             </v-card>
         </div>
     </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { showSnackbar } from '@/services/snackbar';
 import { useAppStore } from '@/stores/app';
 import { useRouter } from 'vue-router';

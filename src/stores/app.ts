@@ -1,6 +1,6 @@
 // Utilities
 import { defineStore } from 'pinia';
-import api, { type Locations, type SearchResults } from '@/services/api';
+import api from '@/services/api';
 
 
 // mock 'session'
@@ -9,11 +9,8 @@ type User = {
     email: string,
 };
 
-interface StateZips {
-    key: string;
-    zips: string[];
-}
 
+// the applicaiton state - filter, session, geodata, pagination, favorites, matched
 export const useAppStore = defineStore('app', {
     state: () => ({
         // user
@@ -21,7 +18,7 @@ export const useAppStore = defineStore('app', {
             user: {} as User,
             expiry: null as Date | null,
         },
-        // filter params state
+        // filter params
         filterState: {
             breeds: [] as string[],
             ageMin: 0,
@@ -30,16 +27,7 @@ export const useAppStore = defineStore('app', {
             sortBy: 'Breed',
             sortDir: 'asc',
         },
-        // location data
-        // locationData: {
-        //     stateAbbrvs: [] as string[],
-        //     allStateAbrvAndZips: [] as StateZips[],
-        //     loc_size: 100,
-        //     loc_from: 0,
-        //     isInitialRun: true,
-        //     remainderDogSearchResponse: [] as string[],
-        // },
-        // potentialDogLocations: {} as Locations,
+        // user location data
         userGeoData: {
             postcode:  "" as string, // ie zip code
             state: "" as string, // FULL state name
@@ -51,11 +39,9 @@ export const useAppStore = defineStore('app', {
             pageNum: 1,
             total: 0,
         },
-        // favorites state
+        // favorites
         favoritesList: [] as string[],
-        prevFavoritesList: [] as string[],
-        // matched
-        matchedPooch: "" as string,
+        matchedPup: "" as string,
         matchRevealed: false,        
     }),
     getters: {
@@ -68,7 +54,7 @@ export const useAppStore = defineStore('app', {
         isUserGeoDataEmpty: (state) => {
             // if any are empty returns true (false to refetch)
             return !state.userGeoData.postcode || !state.userGeoData.state || state.userGeoData.lat === 0 || state.userGeoData.lon === 0;
-        },        
+        },
     },
     actions: {
         // auth
@@ -114,38 +100,32 @@ export const useAppStore = defineStore('app', {
                 return false;
             }
         },
-        // set filter state
-        // setFilterState(filterState: any) {
-        //     this.$patch({
-        //         filterState: filterState
-        //     })
-        // },
+        // filters
         setFilterBreeds(breeds: string[]) {
             this.filterState.breeds = breeds;
         },
-        // set favorites
+        removeBreedFromFilter(breed: string) {
+            this.filterState.breeds = this.filterState.breeds.filter(b => b !== breed);
+        },
+        // set pagination
+        setResultsPerPage(size: number) {
+            this.filterState.size = size;
+        },
+        setPagination(page: number) {
+            this.pagination.pageNum = page;
+        },
+        // favorites
         setFavorites(favorites: string[]) {
             this.$patch({
                 favoritesList: favorites
             })
-            if (!this.favoritesList.includes(this.matchedPooch)) {
-                this.$patch({ matchedPooch: "" });
+            if (!this.favoritesList.includes(this.matchedPup)) {
+                this.$patch({ matchedPup: "" });
                 this.setMatchRevealed(false);
             }
         },
         setMatchRevealed(revealed: boolean) {
             this.matchRevealed = revealed;
-        },
-        setPreviousFavorites(prevFavorites: string[]) {
-            this.prevFavoritesList = prevFavorites;
-        },
-        // set pagination
-        setResultsPerPage(size: number) {
-            this.filterState.size = size;
-            // this.locationData.loc_size = size;
-        },
-        setPagination(page: number) {
-            this.pagination.pageNum = page;
         },
         // set user geo & location-related data
         setUserGeoData(geoData: any) {
@@ -158,61 +138,11 @@ export const useAppStore = defineStore('app', {
                 }
             })
         },
-        // setFilterZipCodeData(zipCodeData: string[]) {
-        //     this.filterState.zipCodes = zipCodeData;
-        // },
-        // setStateAbbrvs(stateAbbrvs: string[]) {
-        //     this.locationData.stateAbbrvs = stateAbbrvs;
-
-        //     const newStateZips: StateZips[] = [];
-
-        //     for (const abbr of stateAbbrvs) {
-        //         const existing = this.locationData.allStateAbrvAndZips.find((entry) => entry.key === abbr);
-        //         if (existing) {
-        //             newStateZips.push(existing);
-        //         } else {
-        //             newStateZips.push({ key: abbr, zips: [] });
-        //         }
-        //     }
-        //     this.locationData.allStateAbrvAndZips = newStateZips;
-        // },
-        // setPotentialDogLocations(dogLocations: Locations) {
-        //     this.potentialDogLocations = dogLocations;
-
-        //     if (this.potentialDogLocations.results.length > 0) {
-        //         for (const stateZipEntry of this.locationData.allStateAbrvAndZips) {
-        //             const matchingZipList = this.potentialDogLocations.results
-        //                 .filter((loc: any) => loc.state === stateZipEntry.key)
-        //                 .map((loc: any) => loc.zip_code);
-
-        //             stateZipEntry.zips = matchingZipList;
-        //         }
-        //     }
-        //     else {
-        //         this.locationData.allStateAbrvAndZips = [];
-        //     }
-        // },
-        // set location data
-        // setZipCodeData(zipCodeData: string[]) {
-        //     this.$patch({
-        //         locationData: {
-        //             zipCodes: zipCodeData,
-        //         }
-        //     })
-        // },
-        // setStateAbbrvData(stateAbbrvData: string[]) {
-        //     this.$patch({
-        //         locationData: {
-        //             stateAbbrvs: stateAbbrvData,
-        //         }
-        //     })
-        // },
          // reset filter and location states
         resetFilterState() {
             this.$patch({
                 filterState: {
                     breeds: [],
-                    // zipCodes: [],
                     ageMin: 0,
                     ageMax: 20,
                     size: 10,
@@ -225,12 +155,6 @@ export const useAppStore = defineStore('app', {
                     pageNum: 1,
                 }
             })
-            // this.$patch({
-            //     locationData: {
-            //         stateAbbrvs: [],
-            //         allStateAbrvAndZips: [],
-            //     }
-            // })
         },
         // reset all states
         resetState() {

@@ -1,9 +1,10 @@
 <template>
+    <!-- the row of chips that indicate which filters are being applied -->
     <v-row>
         <v-col cols="12" class="px-8" style="min-height: 40px;">
 
             <!-- title and clear/reset filter to defautls -->
-            <div class="text-body" style="display: flex; flex-direction: row; align-items: center;">
+            <div class="text-body d-flex flex-row align-center">
                 Applied Filters
                 <v-btn
                     class="ml-2 opacity-100 rounded-sm"
@@ -18,7 +19,7 @@
             </div>
 
             <!-- filter items - breed -->
-            <div class="d-flex ga-1 flex-wrap pt-1" style="width: 100%;">
+            <div class="d-flex ga-1 flex-wrap pt-1">
                 <v-chip 
                     v-if="appStore.filterState.breeds.length" 
                     v-for="breed in appStore.filterState.breeds"
@@ -35,24 +36,7 @@
             </div>
 
             <!-- filter items - others (age, sort by, asc/desc distance, etc) -->
-            <div class="d-flex ga-1 flex-wrap mt-2 py-2 px-1" style="width: 100%; background-color: rgb(var(--v-theme-surface)); border-radius: 8px;">
-                <!-- <v-chip 
-                    v-if="appStore.locationData.stateAbbrvs.length" 
-                    key="filter-sort-by-breed"
-                    class="opacity-100" 
-                    variant="tonal" 
-                    color="white" 
-                    density="compact" 
-                    width="100%"
-                    style="display: flex; flex-direction: row; align-items: center; gap: 0.5rem;"
-                    >
-                    <div style="display: flex; flex-direction: row; flex-wrap: nowrap; gap: 0.2rem">States: 
-                        <div v-for="state, index in appStore.locationData.stateAbbrvs" style="display: flex; flex-direction: row; width: fit-content;">
-                            {{ state }}
-                            <div v-if="index > 0 && index < appStore.locationData.stateAbbrvs.length - 1">, </div>
-                        </div>
-                    </div>
-                </v-chip> -->
+            <div class="d-flex ga-1 flex-wrap mt-2 py-2 px-1">
                 <v-chip 
                     v-if="appStore.filterState.sortBy" 
                     key="filter-sort-by-breed"
@@ -106,7 +90,7 @@ const appStore = useAppStore();
 
 // removes a single 
 const removeBreedFromFilter = (breed: string) => {
-    appStore.filterState.breeds.splice(appStore.filterState.breeds.indexOf(breed), 1);
+    appStore.removeBreedFromFilter(breed);
 }
 </script>
 

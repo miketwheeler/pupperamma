@@ -36,6 +36,7 @@ router.isReady().then(() => {
 
 let isFirstRoute = true;
 
+// programmically add auth requirements to the routes
 routes.forEach(route => {
     if (route.path === '/' || route.path === '/favorites') {
         if (route.meta) route.meta.requiresAuth = true;

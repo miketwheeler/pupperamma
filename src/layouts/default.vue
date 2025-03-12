@@ -18,12 +18,18 @@ import { useRouter } from 'vue-router';
 const appStore = useAppStore();
 const router = useRouter();
 
+// ensure auth'd if not redirect to login
 onMounted(() => {
   if (appStore.isAuthExpired && router.currentRoute.value.path !== '/login') {
     router.replace('/login');
   }
 });
-watch(() => appStore.isAuthExpired, (newValue) => {
+
+// watch for auth expiration
+watch([
+  () => appStore.isAuthExpired,
+  () => appStore.filterState, 
+], async (newValue, oldValue) => {
   if (newValue && router.currentRoute.value.path !== '/login') {
     router.replace('/login');
   }

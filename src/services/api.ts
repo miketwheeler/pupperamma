@@ -24,13 +24,13 @@ interface Coordinates {
     lat: number,
     long: number
 }
-
 export interface SearchResults {
     resultIds: string[],
     total: number,
     next: string,
     prev: string
 }
+
 
 const baseURL = "https://frontend-take-home-service.fetch.com";
 
@@ -43,6 +43,7 @@ const apiClient = axios.create({
     }
 });
 
+// all endpoints for the dog api
 export default {
     // 🫡 post login - (base)/auth/login, body: { name: string, email: string }, -> res: http status
     async login(name: string, email: string) {
@@ -57,7 +58,6 @@ export default {
     async getBreeds(): Promise<string[]> {
         return await apiClient.get("/dogs/breeds").then(res => res.data);
     },
-
     // 🫡 get - (base)/dogs/search
     // query params: breeds (array), zipCodes (array), ageMin, ageMax, size (num results)
     //    from (pagination cursor, optional), sort (sort by field, direction -- sort=field:[asc|desc]) 
@@ -85,21 +85,18 @@ export default {
     async searchDogs(params: any): Promise<SearchResults> {
         return await apiClient.get("/dogs/search", {params}).then(res => res.data);
     },
-
     // 🫡 post - (base)/dogs
     // body: { string[] }  length <=100 ids, res: dog objs
     async getDogsByIds(idList: string[]): Promise<Dog[]> {
         return await apiClient.post("/dogs", idList).then(res => res.data);
     },
-
     // 🫡 post - (base)/dogs/match
     // body: { string[] }  assumed-length <=100 ids, res: dog objs
     //  -> res: { match: str }, a single dog id
     async matchDogs(idList: string[]) {
         return await apiClient.post("/dogs/match", idList);
     },
-
-    // post - (base)/locations/search
+    // 🙁 post - (base)/locations/search
     async searchLocations(params: any): Promise<Locations> {
         return await apiClient.post("/locations/search", params).then(res => res.data);
     }

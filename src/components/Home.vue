@@ -1,9 +1,8 @@
 <template>
-    <!-- <AuthDialog :id="'top-level-auth-invoked'" @update:visible="authDialogVisible" /> -->
-
     <v-container height="calc(100% - 40px)" fluid max-width="1400px">
         <v-row class="fill-height">
-            <!-- left/top Filter Panel -->
+
+            <!-- left-hand Filter Panel -->
             <v-col cols="12" xs="12" sm="4" md="3">
                 <v-card
                     class="py-4"
@@ -20,14 +19,15 @@
                         <h2 class="text-h5 font-weight-bold">Filter</h2>
                     </template>
                     <template #text>
-
+                        
+                        <!-- the filter parameter Ui -->
                         <FilterPanel />
 
                     </template>
                 </v-card>
             </v-col>
 
-            <!-- The main body -->
+            <!-- The main body section (except left-hand filterPanel)-->
             <v-col cols="12"xs="12" sm="8" md="9" class="d-flex flex-column">
                 <!-- visual feedback for applied filter state -->
                 <AppliedFilters />
@@ -38,6 +38,7 @@
         </v-row>
     </v-container>
 </template>
+
 
 <script setup>
 import FilterPanel from '@/components/body/FilterPanel.vue';

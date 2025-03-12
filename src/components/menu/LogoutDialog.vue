@@ -44,20 +44,24 @@
     </v-dialog>
 </template>
 
+
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { showSnackbar } from '@/services/snackbar';
 import { useAppStore } from '@/stores/app';
 import { useRouter } from 'vue-router';
 
+
 const appState = useAppStore();
 const router = useRouter();
+
 const props = defineProps({ visible: Boolean, id: String });
 const emit = defineEmits(['update:visible']);
 
 const valid = ref(false);
 const isLoading = ref(false);
 const isAuthExpired = computed(() => appState !== null && appState.isAuthExpired)
+
 
 // submitForm
 const onSubmit = async () => {
@@ -99,7 +103,6 @@ const updateDialogVisibility = (value: boolean) => {
 const closeDialog = () => {
     updateDialogVisibility(false);
 };
-
 </script>
 
 <style scoped>
