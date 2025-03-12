@@ -8,7 +8,7 @@
         :count="breedsCount"
         :label="breedsCount > 1 ? 'Breeds' : 'Breed'"
         color="primary"
-        variant="solo"
+        variant="solo-filled"
         messages="Select one or more breeds"
         multiple
         class="mt-1 opacity-100 mb-2"
@@ -29,7 +29,7 @@
             v-model="appStore.filterState.ageMin"
             label="Age Min"
             color="primary"
-            variant="solo"
+            variant="solo-filled"
             class="my-1 opacity-100"
             type="number"
 
@@ -42,7 +42,7 @@
             v-model="appStore.filterState.ageMax"
             label="Age Max"
             color="primary"
-            variant="solo"
+            variant="solo-filled"
             class="my-1 opacity-100"
             type="number"
 
@@ -59,7 +59,7 @@
             :items="extraSortByList"
             color="primary" 
             label="Sort By" 
-            variant="solo"
+            variant="solo-filled"
             class=" opacity-100"
             />
         <v-select 
@@ -68,7 +68,7 @@
             @update:model-value="appStore.setResultsPerPage($event)"
             color="primary" 
             label="Show" 
-            variant="solo"
+            variant="solo-filled"
             class="opacity-100" 
             />
         </div>

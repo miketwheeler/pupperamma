@@ -30,43 +30,60 @@
             </div>
 
             <!-- othewise loop and display the dog data in a card grid -->
-            <v-card 
+            <v-tooltip 
                 v-else 
                 v-for="card in cardStack" 
-                :key="`pup-card-${card.id}`" 
-                bordered
-                class="mx-2 my-2" 
-                style="width: 280px;"
-                max-height="430px"
-                @click="card.liked = !card.liked; setFavorite($event, card.id, card.liked)"
+                location="center"
                 >
-                <v-img
-                    :src="card.img"
-                    height="300px"
-                    width="100%"
-                    class="rounded-t-lg"
-                    cover
-                    >
-                    <div class="card-like-btn-container">
-                        <v-btn 
-                            :v-model="appStore.favoritesList.includes(card.id)"
-                            :color="card.liked ? 'error' : 'grey'" 
-                            class="opacity-100 ma-1"
-                            variant="plain"
-                            icon 
-                            :disabled="loading"
-                            @click.stop="card.liked = !card.liked; setFavorite($event, card.id, card.liked)" 
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-card 
+                        :key="`pup-card-${card.id}`" 
+                        bordered
+                        class="mx-2 my-2" 
+                        style="width: 280px;"
+                        max-height="430px"
+                        @click="card.liked = !card.liked; setFavorite($event, card.id, card.liked)"
+                        v-bind="activatorProps"
+                        
+                        >
+                        <v-img
+                            :src="card.img"
+                            height="300px"
+                            width="100%"
+                            class="rounded-t-lg"
+                            cover
                             >
-                            <v-icon v-if="card.liked" icon="mdi-heart" />
-                            <v-icon v-else icon="mdi-heart-outline" />
-                        </v-btn>
-                    </div>
-                </v-img>
-                <v-card-title>{{ card.name }}</v-card-title>
-                <v-card-text class="d-flex flex-row flex-wrap ga-6">
-                    {{ card.breed }} | {{ card.age > 0 ? card.age : "N/A" }} {{ card.age < 1 ? "" : card.age === 1 ? "yr old" : "yrs old" }} | Zipcode {{ card.zip_code }}
-                </v-card-text>
-            </v-card>
+                            <div class="card-like-btn-container">
+                                <v-btn 
+                                    :v-model="appStore.favoritesList.includes(card.id)"
+                                    :color="card.liked ? 'error' : 'grey'" 
+                                    class="opacity-100 ma-1"
+                                    variant="plain"
+                                    icon 
+                                    :disabled="loading"
+                                    @click.stop="card.liked = !card.liked; setFavorite($event, card.id, card.liked)" 
+                                    >
+                                    <v-icon v-if="card.liked" icon="mdi-heart" />
+                                    <v-icon v-else icon="mdi-heart-outline" />
+                                </v-btn>
+                            </div>
+                        </v-img>
+                        <v-card-title>{{ card.name }}</v-card-title>
+                        <v-card-text class="d-flex flex-row flex-wrap ga-6">
+                            {{ card.breed }} | {{ card.age > 0 ? card.age : "N/A" }} {{ card.age < 1 ? "" : card.age === 1 ? "yr old" : "yrs old" }} | Zipcode {{ card.zip_code }}
+                        </v-card-text>
+                    </v-card>
+                </template>
+                <span>
+                    {{ 
+                        props.page === 'favorites' 
+                        ? "Remove from favorites" 
+                        : card.liked && props.page === "home" 
+                        ? "Remove from favorites" 
+                        : "Add to Favorites" 
+                    }}
+                </span>
+            </v-tooltip>
         </v-col>
     </v-row>
     <v-row>
