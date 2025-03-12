@@ -138,7 +138,7 @@ export const useAppStore = defineStore('app', {
                 }
             })
         },
-         // reset filter and location states
+         // reset filter and pagination states
         resetFilterState() {
             this.$patch({
                 filterState: {

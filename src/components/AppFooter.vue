@@ -4,12 +4,15 @@
             :key="item.title"
             :href="item.href"
             :title="item.title"
-            style="color: white;"
             class="d-inline-block mx-2 social-link"
             rel="noopener noreferrer"
             target="_blank"
             >
-            <v-icon :icon="item.icon" size="24" />
+            <v-icon 
+                :color="theme.current.value.dark ? 'white' : 'black'" 
+                :icon="item.icon" 
+                size="24" 
+                />
         </a>
         <div class="text-caption text-disabled" style="position: absolute; right: 16px;">
             Michael Wheeler 2025
@@ -18,6 +21,11 @@
 </template>
 
 <script setup lang="ts">
+import { useTheme } from 'vuetify';
+
+const theme = useTheme();
+
+
 const items = [
     {
         title: "Mike's GitHub",

@@ -42,17 +42,17 @@
                     key="filter-sort-by-breed"
                     class="opacity-100" 
                     variant="tonal" 
-                    color="white" 
+                    color="text" 
                     density="compact" 
                     >
                     <span>Sorted By {{ appStore.filterState.sortBy }}</span>
                 </v-chip>
                 <v-chip 
-                    v-if="appStore.filterState.ageMin && appStore.filterState.ageMax" 
+                    v-if="appStore.filterState.ageMin > -1 && appStore.filterState.ageMax" 
                     key="filter-age-range"
                     class="opacity-100" 
                     variant="tonal" 
-                    color="white" 
+                    color="text" 
                     density="compact" 
                     >
                     <span>Ages {{ appStore.filterState.ageMin }} to {{ appStore.filterState.ageMax }}</span>
@@ -62,7 +62,7 @@
                     key="filter-sorted-direction"
                     class="opacity-100" 
                     variant="tonal" 
-                    color="white" 
+                    color="text" 
                     density="compact" 
                     >
                     <span>{{ appStore.filterState.sortDir === 'asc' ? 'A to Z' : 'Z to A' }}</span>
@@ -72,7 +72,7 @@
                     key="filter-results-per-page"
                     class="opacity-100" 
                     variant="tonal" 
-                    color="white" 
+                    color="text" 
                     density="compact" 
                     >
                     <span>{{ appStore.filterState.size }} per page</span>

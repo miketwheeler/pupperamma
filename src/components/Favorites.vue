@@ -3,7 +3,7 @@
     <v-container height="calc(100% - 40px)" fluid max-width="1400px">
 
         <!-- display load spinner on loading -->
-        <v-row v-if="loading" class="fill-height">
+        <v-row v-if="loading && !isFirstRender" class="fill-height">
             <v-col cols="12" class="d-flex justify-center align-center fill-height">
                 <v-progress-circular indeterminate color="primary" size="64"/>
             </v-col>
@@ -70,7 +70,7 @@
                     id="recommended-dog-card"
                     >
                     <v-card-text>
-                        No favorites to generate a match with 🙁
+                        No favorites, no matches 🙁
                     </v-card-text>
                 </v-card>
             </v-col>
@@ -100,12 +100,14 @@ const appStore = useAppStore();
 const jsConfetti = new JSConfetti();
 
 const recommendedPup = ref<Dog | undefined>();
+const isFirstRender = ref(false);
 const loading = ref(false);
 const isAuthExpired = computed(() => appStore.isAuthExpired);
 
 
 const getMatchedPup = async () => {
     loading.value = true;
+    isFirstRender.value = false;
 
     try {
         // if there are no favorites, reset the recommended dog
@@ -163,27 +165,21 @@ onMounted(() => {
     if (!isAuthExpired.value) {
         getMatchedPup()
     };
+    isFirstRender.value = true;
 })
 
 watch([
     () => appStore.favoritesList, 
     isAuthExpired
 ], async(newValues, oldValues) => {
-    console.log("favorites watcher triggered")
-    console.log("newValues:", newValues)
-    console.log("oldValues:", oldValues)
-
     const [newFavorites, newAuthExpired] = newValues;
     const [oldFavorites, oldAuthExpired] = oldValues;
-
-    console.log("newFavorites:", newFavorites)
-    console.log("oldFavorites:", oldFavorites)
-
 
     if (!newAuthExpired) {
         const favesChanged = newFavorites.length !== oldFavorites.length || !newFavorites.every((val: any) => oldFavorites.includes(val)) 
         const matchExistsInFavorites = newFavorites.includes(appStore.matchedPup);
 
+        // NOTE: is always remove on this page - adds on the home page
         // anytime it changes, if the matched was removed., reset the matched params
         if (favesChanged && !matchExistsInFavorites) {
             appStore.matchedPup = "";

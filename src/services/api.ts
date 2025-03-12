@@ -97,7 +97,7 @@ export default {
         return await apiClient.post("/dogs/match", idList);
     },
     // 🙁 post - (base)/locations/search
-    async searchLocations(params: any): Promise<Locations> {
-        return await apiClient.post("/locations/search", params).then(res => res.data);
-    }
+    // async searchLocations(params: any): Promise<Locations> {
+    //     return await apiClient.post("/locations/search", params).then(res => res.data);
+    // }
 }

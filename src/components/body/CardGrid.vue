@@ -25,7 +25,7 @@
             <!-- present 'no results' if filter yields none -->
             <div v-if="!loading && !cardListDogItems?.length" class="d-flex justify-center align-center w-100 h-100">
                 <div class="text-h5 font-weight-bold">
-                    No dogs found here. Please try a different filter.
+                    {{ props?.page == "favorites" ? "No favorites to display." : "No dogs found here. Please try a different filter."}}
                 </div>
             </div>
 
@@ -149,10 +149,8 @@ const updatePagination = async (pageNum: number) => {
 
 // adds/remove favorites to state var -> appStore.favorites (list ids)
 const setFavorite = (event: MouseEvent, id: string, liked: boolean) => {
-    // if on the home page
     if (props && props.page !== 'favorites') {
         if (liked) {
-            // add to the rolling list
             appStore.setFavorites([...appStore.favoritesList, id]);
 
             // always reset on additions - since pool to generate from has changed
@@ -160,7 +158,6 @@ const setFavorite = (event: MouseEvent, id: string, liked: boolean) => {
             appStore.setMatchRevealed(false);
         } else {
             const wasMatched = appStore.matchedPup === id;
-            // remove from the rolling list
             appStore.setFavorites(appStore.favoritesList.filter((item) => item !== id));
 
             // if the one removed was the state's matched, reset
@@ -181,7 +178,7 @@ const setFavorite = (event: MouseEvent, id: string, liked: boolean) => {
 }
 
 // populates the card stack with the dog data - for rendering the cards
-const populateCards = async (liked?: boolean) => {
+const populateCards = (liked?: boolean) => {
     if (!cardListDogItems.value) {
         showSnackbar('Something went wrong loading dog data. Please try again.', 'warning');
         return 
@@ -299,7 +296,7 @@ const getDogs = async () => {
         };
 
         // for rendering the current stack of dog data
-        await populateCards();
+        populateCards();
 
     } catch (error) {
         console.error('Error fetching dogs:', error);
