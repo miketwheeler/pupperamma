@@ -5,5 +5,5 @@ script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://unpkg
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 img-src 'self' data:;
 font-src 'self' https://fonts.gstatic.com data:;
-connect-src 'self' https://frontend-take-home-service.fetch.com https://nominatim.openstreetmap.org;
+connect-src 'self' https://frontend-take-home-service.fetch.com https://nominatim.openstreetmap.org; frame-ancestors 'none';
 Cross-Origin-Opener-Policy: same-origin
