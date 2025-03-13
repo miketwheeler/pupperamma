@@ -118,6 +118,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import api, { type Dog, type SearchResults, type Locations } from '@/services/api';
 import { showSnackbar } from '@/services/snackbar';
+import { debounce } from 'lodash';
 
 
 // TODO: type to the card model && 'Dog' model
@@ -299,7 +300,7 @@ const getTheDogGoneData = async () => {
 }
 
 // req to get all dogs to populate the card stack. 
-const getDogs = async () => {
+const getDogs = debounce(async () => {
     loading.value = true;
     cardStack.value = []; // reset rendered cards on state changes/refetching
 
@@ -320,7 +321,7 @@ const getDogs = async () => {
     } finally {
         loading.value = false;
     }
-}
+}, 300);
 
 
 // if page is home, get the dogs, else get the favorited dogs

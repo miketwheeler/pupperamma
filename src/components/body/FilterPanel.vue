@@ -26,20 +26,21 @@
     <div class="text-h6 ml-2 mb-1">Results</div>
     <div class="d-flex flex-row ga-2 flex-wrap">
         <v-text-field
-            v-model="appStore.filterState.ageMin"
+            v-model.number="appStore.filterState.ageMin"
+            @update:model-value="updateAge('min', $event)"
             label="Age Min"
             color="primary"
             variant="solo-filled"
             class="my-1 opacity-100"
             type="number"
-
             minWidth="80px"
             min="0"
             :max="appStore.filterState.ageMax"
             />
         <div style="display: flex; align-items: center;">to</div>
         <v-text-field
-            v-model="appStore.filterState.ageMax"
+            v-model.number="appStore.filterState.ageMax"
+            @update:model-value="updateAge('max', $event)"
             label="Age Max"
             color="primary"
             variant="solo-filled"
@@ -108,6 +109,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app';
 import api from '@/services/api';
 import locApi from '@/services/locApi';
+import { debounce } from 'lodash';
 
 
 const appStore = useAppStore();
@@ -217,6 +219,15 @@ const getGeoData = async () => {
         console.error('Geolation not available!');
     }
 }
+
+// debounce the age filter updates
+const updateAge = debounce((minOrMax: 'min' | 'max', value: any) => {
+    if (minOrMax === 'min') {
+        appStore.filterState.ageMin = value;
+    } else {
+        appStore.filterState.ageMax = value;
+    }
+}, 2000);
 
 // if the user changes the breed selection or is re-logged in, update the filter state
 watch(isAuthExpired, async (newValue) => {

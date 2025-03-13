@@ -35,7 +35,7 @@
                                     :rules="emailRules"
                                     outlined 
                                     required
-                                    validate-on="blur"
+                                    validate-on="input lazy"
                                     />
                             </v-col>
                         </v-row>              
