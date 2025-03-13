@@ -184,7 +184,10 @@ watch([
         if (favesChanged && !matchExistsInFavorites) {
             appStore.matchedPup = "";
             appStore.setMatchRevealed(false);
-            getMatchedPup();
+
+            // call get if the list still has items in it
+            if (newFavorites.length > 0)
+                getMatchedPup();
 
         // else if there was no matched, fetch one
         } else if (!appStore.matchedPup) {

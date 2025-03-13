@@ -45,6 +45,10 @@ Once the build process is completed, your application will be ready for deployme
 
 ## ❗️ Important Links
 - 📄 [Docs](https://vuetifyjs.com/)
+- 🍍 Pinia State (https://pinia.vuejs.org/introduction.html)
+- 🗺️ Nominatim Maual/docs (https://nominatim.org/release-docs/develop/api/Search/)
+- 📌OpenStreetMap wiki (https://wiki.openstreetmap.org/)
+- 📄 Stackoverflow (https://stackoverflow.com/)
 
 ## ✨ Features
 - Built with Vue 3 and Vuetify
