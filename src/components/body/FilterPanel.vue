@@ -227,7 +227,7 @@ const updateAge = debounce((minOrMax: 'min' | 'max', value: any) => {
     } else {
         appStore.filterState.ageMax = value;
     }
-}, 2000);
+}, 300);
 
 // if the user changes the breed selection or is re-logged in, update the filter state
 watch(isAuthExpired, async (newValue) => {
