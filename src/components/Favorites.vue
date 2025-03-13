@@ -184,6 +184,7 @@ watch([
         if (favesChanged && !matchExistsInFavorites) {
             appStore.matchedPup = "";
             appStore.setMatchRevealed(false);
+            getMatchedPup();
 
         // else if there was no matched, fetch one
         } else if (!appStore.matchedPup) {
