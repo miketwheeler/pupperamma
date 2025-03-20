@@ -122,7 +122,7 @@ import { debounce } from 'lodash';
 
 
 // TODO: type to the card model && 'Dog' model
-interface Card {
+export interface Card {
     id: string;
     img: string;
     name: string;

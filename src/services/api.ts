@@ -43,6 +43,15 @@ const apiClient = axios.create({
     }
 });
 
+
+let fetched: PrevParams[] = new Array(0); // used to store previous params for pagination
+const MAX_FETCHED = 3; // max number of previous params to store
+
+interface PrevParams {
+    params: string,
+    results: SearchResults
+}
+
 // all endpoints for the dog api
 export default {
     // 🫡 post login - (base)/auth/login, body: { name: string, email: string }, -> res: http status
@@ -83,7 +92,31 @@ export default {
     //     }).then(res => res.data);
     // },
     async searchDogs(params: any): Promise<SearchResults> {
-        return await apiClient.get("/dogs/search", {params}).then(res => res.data);
+        const paramStr = JSON.stringify(params)
+
+        // if there's any items
+        if (fetched.length) {
+            const existing = fetched.find((item) => item.params === paramStr);
+            
+            // if previous exist
+            if (existing) {
+
+                console.log("fetched stash: ", fetched);
+                
+                return existing.results;
+            }
+        }
+
+        // otherwise normal fetch - stash to start of prevResults and remove if we're at the limit from the tail 
+        const dogSearchResults = await apiClient.get("/dogs/search", {params}).then(res => res.data);
+        
+        fetched.unshift({ params: paramStr, results: dogSearchResults });
+
+        if (fetched.length > MAX_FETCHED) fetched.pop(); // remove last
+
+        console.log("fetched stash: ", fetched);
+        
+        return dogSearchResults;
     },
     // 🫡 post - (base)/dogs
     // body: { string[] }  length <=100 ids, res: dog objs

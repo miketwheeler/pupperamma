@@ -2,6 +2,8 @@
 import { defineStore } from 'pinia';
 import api from '@/services/api';
 
+import { type Card } from '@/components/body/CardGrid.vue'; // Dog interface for type checking
+
 
 // mock 'session'
 type User = {
