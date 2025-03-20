@@ -67,7 +67,7 @@ export const useAppStore = defineStore('app', {
 
                 const res = await api.login(name, email);
 
-                if (res.status === 200) {
+                if (res && res.status === 200) {
                     this.$patch({
                         session: {
                             user: { name, email },

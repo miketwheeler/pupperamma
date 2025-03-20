@@ -56,7 +56,20 @@ interface PrevParams {
 export default {
     // 🫡 post login - (base)/auth/login, body: { name: string, email: string }, -> res: http status
     async login(name: string, email: string) {
-        return await apiClient.post("/auth/login", { name, email });
+        try {
+            const res = await apiClient.post("/auth/login", { name, email });
+            return res;
+
+        } catch (error: any) {
+            if (error.response) {
+                console.error("Login api error: ", error.response.data);
+            } else if (error.request) {
+                console.error("Login req error: ", error.request);
+            } else {
+                console.error("Somthing else has gone wrongn with the login: ", error.message);
+                throw new Error("An error occurred while logging in.");
+            }
+        }
     },
     // 🫡 post logout - (base)/auth/logout
     async logout() {
@@ -100,9 +113,6 @@ export default {
             
             // if previous exist
             if (existing) {
-
-                console.log("fetched stash: ", fetched);
-                
                 return existing.results;
             }
         }
@@ -110,12 +120,9 @@ export default {
         // otherwise normal fetch - stash to start of prevResults and remove if we're at the limit from the tail 
         const dogSearchResults = await apiClient.get("/dogs/search", {params}).then(res => res.data);
         
-        fetched.unshift({ params: paramStr, results: dogSearchResults });
+        fetched.unshift({ params: paramStr, results: dogSearchResults }); // prepend
+        if (fetched.length > MAX_FETCHED) fetched.pop(); // remove last if at max length
 
-        if (fetched.length > MAX_FETCHED) fetched.pop(); // remove last
-
-        console.log("fetched stash: ", fetched);
-        
         return dogSearchResults;
     },
     // 🫡 post - (base)/dogs

@@ -13,29 +13,31 @@
 
                 <!-- login form -->
                 <v-card-text>
-                    <v-form ref="formModel" lazy-validation v-model="valid" @submit.prevent="onSubmit">
+                    <v-form ref="formModel" v-model="valid" lazy-validation @submit.prevent="onSubmit">
                         <v-row>
                             <v-col cols="12" gap="2">
                                 <v-text-field
                                     v-model="name"
                                     :readonly="isLoading"
+                                    :rules="nameRules"
+                                    validate-on="blur"
                                     name="name"
                                     label="Name"
-                                    :rules="nameRules"
                                     outlined 
                                     required
-                                    validate-on="blur"
+                                    @keyup.enter="validateFormThenSubmit"
                                     />
                                 <v-text-field
                                     v-model="email"
                                     :readonly="isLoading"
+                                    :rules="emailRules"
+                                    validate-on="input lazy"
                                     name="email"
                                     label="Email"
                                     type="email"
-                                    :rules="emailRules"
                                     outlined 
                                     required
-                                    validate-on="input lazy"
+                                    @keyup.enter="validateFormThenSubmit"
                                     />
                             </v-col>
                         </v-row>              
@@ -47,10 +49,10 @@
                     <v-btn 
                         color="primary" 
                         :loading="isLoading"
-                        :disabled="!valid || isLoading"
+                        :disabled="isLoading || !valid"
+                        :variant="(isLoading || !valid) ? 'tonal' : 'flat'"
                         type="submit"
-                        variant="flat"
-                        @click="onSubmit"
+                        @click="validateFormThenSubmit"
                         >
                         Login
                     </v-btn>
@@ -66,15 +68,18 @@ import { ref } from 'vue';
 import { showSnackbar } from '@/services/snackbar';
 import { useAppStore } from '@/stores/app';
 import { useRouter } from 'vue-router';
+import { type VForm } from 'vuetify/components'
+
 
 const appState = useAppStore();
 const router = useRouter();
 
+const formModel = ref<VForm | null>(null);
 const valid = ref(false);
 const name = ref('');
 const email = ref('');
 const isLoading = ref(false);
-// const isAuthExpired = computed(() => appState !== null && appState.isAuthExpired)
+
 
 // validation rules
 const nameRules = [
@@ -90,8 +95,17 @@ const emailRules = [
     }
 ];
 
+const validateFormThenSubmit = async () => {
+    if (!formModel.value) return;
+    const { valid } = await formModel.value.validate();
+    if (valid) onSubmit();
+}
+
 // submitForm
 const onSubmit = async () => {
+    // check the form model actually has values
+    if(!formModel.value) return;
+
     isLoading.value = true;
     let message, color, res;
 
@@ -102,31 +116,22 @@ const onSubmit = async () => {
 
         router.replace("/");
 
-        console.log("Login successful");
-
         message = 'Login successful!' + ` Welcome back, ${appState.session.user.name} 🤗`; 
         color = 'success';
     } catch (error: any) {
-        message = 'Error logging in';
+        message = error.message || 'Error logging in';
         color = 'error';
-        console.error("Error during authentication:", error);
     }
     
     showSnackbar(message, color);
     resetFormModel();
     isLoading.value = false;
-    closeDialog();
 };
 
 // Reset the working model
 const resetFormModel = () => {
     name.value = '';
     email.value = '';
-};
-
-// Close the dialog
-const closeDialog = () => {
-    resetFormModel();
 };
 </script>
 
