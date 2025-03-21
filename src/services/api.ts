@@ -20,10 +20,10 @@ export interface Locations {
     results: Location[],
     total: number
 }
-interface Coordinates {
-    lat: number,
-    long: number
-}
+// interface Coordinates {
+//     lat: number,
+//     long: number
+// }
 export interface SearchResults {
     resultIds: string[],
     total: number,
@@ -75,7 +75,6 @@ export default {
     async logout() {
         return await apiClient.post("/auth/logout");
     },
-
     // 🫡 get - (base)/dogs/breeds, res -> array of breed names
     async getBreeds(): Promise<string[]> {
         return await apiClient.get("/dogs/breeds").then(res => res.data);
@@ -111,6 +110,7 @@ export default {
         if (fetched.length) {
             const existing = fetched.find((item) => item.params === paramStr);
             
+            console.log("fetched list: ", fetched);
             // if previous exist
             if (existing) {
                 return existing.results;
@@ -122,6 +122,7 @@ export default {
         
         fetched.unshift({ params: paramStr, results: dogSearchResults }); // prepend
         if (fetched.length > MAX_FETCHED) fetched.pop(); // remove last if at max length
+        console.log("fetched list: ", fetched);
 
         return dogSearchResults;
     },

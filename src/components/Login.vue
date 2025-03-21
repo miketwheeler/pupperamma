@@ -97,7 +97,9 @@ const emailRules = [
 
 const validateFormThenSubmit = async () => {
     if (!formModel.value) return;
+
     const { valid } = await formModel.value.validate();
+    
     if (valid) onSubmit();
 }
 
